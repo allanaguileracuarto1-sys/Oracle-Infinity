@@ -789,23 +789,8 @@ export default function App() {
   };
 
   const generateDiscoverySuggestions = async () => {
-    console.log("Generate Hypotheses function called. User:", user?.uid, "Requests:", requestsRemaining, "Discovering:", isDiscovering);
-    if (!user) {
-      console.log("No user found.");
-      alert("Please connect your account to generate hypotheses.");
-      return;
-    }
-    if (requestsRemaining <= 0) {
-      console.log("No requests remaining.");
-      alert("Request limit reached. Please wait a minute.");
-      return;
-    }
-    if (isDiscovering) {
-      console.log("Already discovering.");
-      return;
-    }
-
-    setIsDiscovering(true);
+    console.log("Generate Hypotheses function started. User:", user?.uid);
+    // Note: setIsDiscovering(true) is now called in the onClick handler for immediate feedback
     setStatusMessage("Synthesizing new hypotheses...");
     setRequestsRemaining(prev => prev - 1);
     try {
@@ -1696,15 +1681,20 @@ export default function App() {
                     {requestsRemaining} Requests Left
                   </div>
                   <button 
-                    onClick={() => {
-                      console.log("Lab button clicked");
+                    onPointerDown={() => {
+                      console.log("Lab button pointer down. User:", !!user, "Requests:", requestsRemaining, "Discovering:", isDiscovering);
+                      if (isDiscovering || requestsRemaining <= 0 || !user) {
+                        console.log("Button click blocked by state.");
+                        return;
+                      }
+                      setIsDiscovering(true);
                       generateDiscoverySuggestions();
                     }}
                     disabled={isDiscovering || requestsRemaining <= 0 || !user}
-                    className="relative z-10 px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation"
+                    className="relative z-20 px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation"
                   >
                     {isDiscovering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                    Generate Hypotheses
+                    {!user ? "Connect to Lab" : requestsRemaining <= 0 ? "No Requests" : isDiscovering ? "Synthesizing..." : "Generate Hypotheses"}
                   </button>
                 </div>
               </div>
