@@ -20,7 +20,7 @@ const NavButtons = ({ view, setView, hypothesesCount }: { view: string, setView:
     <button 
       onClick={() => setView('oracle')}
       className={cn(
-        "px-4 py-1.5 rounded-md text-[10px] font-mono uppercase tracking-widest transition-all",
+        "px-3 py-2 sm:px-4 sm:py-1.5 rounded-md text-[9px] sm:text-[10px] font-mono uppercase tracking-widest transition-all",
         view === 'oracle' ? "bg-orange-500 text-white" : "text-white/40 hover:text-white/60"
       )}
     >
@@ -29,7 +29,7 @@ const NavButtons = ({ view, setView, hypothesesCount }: { view: string, setView:
     <button 
       onClick={() => setView('database')}
       className={cn(
-        "px-4 py-1.5 rounded-md text-[10px] font-mono uppercase tracking-widest transition-all",
+        "px-3 py-2 sm:px-4 sm:py-1.5 rounded-md text-[9px] sm:text-[10px] font-mono uppercase tracking-widest transition-all",
         view === 'database' ? "bg-orange-500 text-white" : "text-white/40 hover:text-white/60"
       )}
     >
@@ -38,7 +38,7 @@ const NavButtons = ({ view, setView, hypothesesCount }: { view: string, setView:
     <button 
       onClick={() => setView('knowledge')}
       className={cn(
-        "px-4 py-1.5 rounded-md text-[10px] font-mono uppercase tracking-widest transition-all",
+        "px-3 py-2 sm:px-4 sm:py-1.5 rounded-md text-[9px] sm:text-[10px] font-mono uppercase tracking-widest transition-all",
         view === 'knowledge' ? "bg-orange-500 text-white" : "text-white/40 hover:text-white/60"
       )}
     >
@@ -47,7 +47,7 @@ const NavButtons = ({ view, setView, hypothesesCount }: { view: string, setView:
     <button 
       onClick={() => setView('users')}
       className={cn(
-        "px-4 py-1.5 rounded-md text-[10px] font-mono uppercase tracking-widest transition-all",
+        "px-3 py-2 sm:px-4 sm:py-1.5 rounded-md text-[9px] sm:text-[10px] font-mono uppercase tracking-widest transition-all",
         view === 'users' ? "bg-orange-500 text-white" : "text-white/40 hover:text-white/60"
       )}
     >
@@ -56,7 +56,7 @@ const NavButtons = ({ view, setView, hypothesesCount }: { view: string, setView:
     <button 
       onClick={() => setView('corrections')}
       className={cn(
-        "px-4 py-1.5 rounded-md text-[10px] font-mono uppercase tracking-widest transition-all",
+        "px-3 py-2 sm:px-4 sm:py-1.5 rounded-md text-[9px] sm:text-[10px] font-mono uppercase tracking-widest transition-all",
         view === 'corrections' ? "bg-orange-500 text-white" : "text-white/40 hover:text-white/60"
       )}
     >
@@ -65,13 +65,13 @@ const NavButtons = ({ view, setView, hypothesesCount }: { view: string, setView:
     <button 
       onClick={() => setView('lab')}
       className={cn(
-        "px-4 py-1.5 rounded-md text-[10px] font-mono uppercase tracking-widest transition-all flex items-center gap-2",
+        "px-3 py-2 sm:px-4 sm:py-1.5 rounded-md text-[9px] sm:text-[10px] font-mono uppercase tracking-widest transition-all flex items-center gap-2",
         view === 'lab' ? "bg-orange-500 text-white" : "text-white/40 hover:text-white/60"
       )}
     >
       Lab
       {hypothesesCount > 0 && (
-        <span className="px-1 py-0.5 rounded bg-white/20 text-[8px]">
+        <span className="px-1 py-0.5 rounded bg-white/20 text-[7px] sm:text-[8px]">
           {hypothesesCount}
         </span>
       )}
@@ -79,7 +79,7 @@ const NavButtons = ({ view, setView, hypothesesCount }: { view: string, setView:
     <button 
       onClick={() => setView('heuristics')}
       className={cn(
-        "px-4 py-1.5 rounded-md text-[10px] font-mono uppercase tracking-widest transition-all",
+        "px-3 py-2 sm:px-4 sm:py-1.5 rounded-md text-[9px] sm:text-[10px] font-mono uppercase tracking-widest transition-all",
         view === 'heuristics' ? "bg-orange-500 text-white" : "text-white/40 hover:text-white/60"
       )}
     >
@@ -134,6 +134,9 @@ export default function App() {
   const [editingCorrectionInput, setEditingCorrectionInput] = useState('');
 
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [userRole, setUserRole] = useState<'admin' | 'user' | null>(null);
+  const [isRoleLoading, setIsRoleLoading] = useState(true);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [firestoreError, setFirestoreError] = useState<string | null>(null);
   const [isDbLoading, setIsDbLoading] = useState(true);
 
@@ -142,6 +145,9 @@ export default function App() {
       setUser(u);
       setIsAuthReady(true);
       if (u) {
+        setIsRoleLoading(true);
+        const role = u.email === 'allanaguileracuarto1@gmail.com' ? 'admin' : 'user';
+        setUserRole(role);
         try {
           // Register/Update user in Firestore
           await setDoc(doc(db, 'users', u.uid), {
@@ -150,11 +156,16 @@ export default function App() {
             email: u.email,
             photoURL: u.photoURL,
             lastLogin: new Date().toISOString(),
-            role: u.email === 'allanaguileracuarto1@gmail.com' ? 'admin' : 'user'
+            role: role
           }, { merge: true });
         } catch (err) {
           console.error("User Registration Error:", err);
+        } finally {
+          setIsRoleLoading(false);
         }
+      } else {
+        setUserRole(null);
+        setIsRoleLoading(false);
       }
     });
     return () => unsubscribe();
@@ -263,6 +274,9 @@ export default function App() {
         console.error("Internal Firebase Auth error. Check configuration.");
       } else if (err.code === 'auth/network-request-failed') {
         console.error("Network request failed. This might be due to third-party cookie blocking.");
+      } else if (err.code === 'auth/unauthorized-domain') {
+        console.error("This domain is not authorized in the Firebase Console. Please add your Vercel domain to the 'Authorized domains' list in the Firebase Authentication settings.");
+        alert("Error: Este dominio no está autorizado en Firebase. Por favor, añade tu URL de Vercel a la lista de dominios autorizados en la consola de Firebase.");
       }
     }
   };
@@ -775,22 +789,49 @@ export default function App() {
   };
 
   const generateDiscoverySuggestions = async () => {
-    if (!user || requestsRemaining <= 0) return;
+    console.log("Generate Hypotheses function called. User:", user?.uid, "Requests:", requestsRemaining, "Discovering:", isDiscovering);
+    if (!user) {
+      console.log("No user found.");
+      alert("Please connect your account to generate hypotheses.");
+      return;
+    }
+    if (requestsRemaining <= 0) {
+      console.log("No requests remaining.");
+      alert("Request limit reached. Please wait a minute.");
+      return;
+    }
+    if (isDiscovering) {
+      console.log("Already discovering.");
+      return;
+    }
+
     setIsDiscovering(true);
+    setStatusMessage("Synthesizing new hypotheses...");
     setRequestsRemaining(prev => prev - 1);
     try {
       const { GoogleGenAI, Type } = await import('@google/genai');
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
       
-      // Pick 5 random items from global recipes to use as basis
-      const basis = globalRecipes
+      // Default base elements if globalRecipes is empty
+      const baseElements = ["Water", "Fire", "Earth", "Wind", "Steam", "Mud", "Lava", "Dust"];
+      
+      // Pick 8 random items from global recipes to use as basis
+      let basis = globalRecipes
         .sort(() => 0.5 - Math.random())
         .slice(0, 8)
         .map(r => r.target);
 
+      // If basis is too small, add base elements
+      if (basis.length < 5) {
+        basis = [...new Set([...basis, ...baseElements.sort(() => 0.5 - Math.random()).slice(0, 5)])];
+      }
+
+      console.log("Generating hypotheses based on:", basis);
+
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: `Based on these items: ${basis.join(', ')}, suggest 5 new interesting combinations that might exist in Infinite Craft.
+        The combinations should be logical but creative.
         Return them as an array of objects with result, ingredients (array of 2), and emoji.`,
         config: {
           responseMimeType: "application/json",
@@ -809,28 +850,54 @@ export default function App() {
         }
       });
 
-      const suggestions = JSON.parse(response.text);
+      let text = response.text;
+      // Strip markdown if present
+      if (text.includes('```json')) {
+        text = text.split('```json')[1].split('```')[0].trim();
+      } else if (text.includes('```')) {
+        text = text.split('```')[1].split('```')[0].trim();
+      }
+
+      const suggestions = JSON.parse(text);
+      console.log("AI Suggestions:", suggestions);
       
-      // Filter out suggestions that are already learned
+      // Filter out suggestions that are already learned (in globalRecipes or allLearnedCrafts)
       const normalizeKey = (s: string) => s?.trim().toLowerCase() || '';
-      const learnedKeys = new Set(allLearnedCrafts.map(c => c.ingredients.map(normalizeKey).sort().join('+')));
-      const learnedResults = new Set(allLearnedCrafts.map(c => c.result.toLowerCase()));
+      const learnedKeys = new Set([
+        ...allLearnedCrafts.map(c => c.ingredients.map(normalizeKey).sort().join('+')),
+        ...globalRecipes.map(r => r.steps?.[0]?.ingredients?.map(normalizeKey).sort().join('+') || '')
+      ]);
+      const learnedResults = new Set([
+        ...allLearnedCrafts.map(c => c.result.toLowerCase()),
+        ...globalRecipes.map(r => r.target.toLowerCase())
+      ]);
       
       const filteredSuggestions = suggestions.filter((s: any) => {
         const key = s.ingredients.map(normalizeKey).sort().join('+');
         return !learnedKeys.has(key) && !learnedResults.has(s.result.toLowerCase());
       });
 
-      // Save suggestions to Firestore
-      for (const s of filteredSuggestions) {
-        await addDoc(collection(db, 'hypotheses'), {
-          ...s,
-          createdBy: user.uid,
-          createdAt: new Date().toISOString()
-        });
+      console.log("Filtered Suggestions:", filteredSuggestions);
+
+      if (filteredSuggestions.length === 0) {
+        setStatusMessage("No new unique hypotheses found. Try again later.");
+        setTimeout(() => setStatusMessage(null), 3000);
+      } else {
+        setStatusMessage(`Successfully generated ${filteredSuggestions.length} hypotheses!`);
+        setTimeout(() => setStatusMessage(null), 3000);
+        // Save suggestions to Firestore
+        for (const s of filteredSuggestions) {
+          await addDoc(collection(db, 'hypotheses'), {
+            ...s,
+            createdBy: user.uid,
+            createdAt: new Date().toISOString()
+          });
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Discovery Error:", err);
+      setStatusMessage(`Error: ${err.message || "Unknown error"}`);
+      setTimeout(() => setStatusMessage(null), 5000);
     } finally {
       setIsDiscovering(false);
     }
@@ -898,7 +965,7 @@ export default function App() {
             ) : (
               <button 
                 onClick={handleLogin}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500 hover:bg-orange-600 text-[10px] font-mono uppercase tracking-widest transition-all"
+                className="flex items-center gap-2 px-4 py-2.5 sm:py-1.5 rounded-full bg-orange-500 hover:bg-orange-600 text-[10px] font-mono uppercase tracking-widest transition-all"
               >
                 <LogIn className="w-3 h-3" />
                 Connect
@@ -908,14 +975,14 @@ export default function App() {
         </div>
         
         {/* Mobile Navigation */}
-        <div className="lg:hidden border-t border-white/5 overflow-x-auto no-scrollbar">
-          <nav className="flex items-center gap-1 p-2 min-w-max">
+        <div className="lg:hidden border-t border-white/5 overflow-x-auto no-scrollbar bg-black/40">
+          <nav className="flex items-center gap-1 p-2 min-w-max px-4">
             <NavButtons view={view} setView={setView} hypothesesCount={hypotheses.length} />
           </nav>
         </div>
       </header>
 
-      <main className="relative max-w-7xl mx-auto px-6 py-12 z-10">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 z-10">
         <AnimatePresence mode="wait">
           {view === 'oracle' ? (
             <motion.div 
@@ -923,7 +990,7 @@ export default function App() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8"
             >
               {/* Oracle UI (Existing logic) */}
               <div className="lg:col-span-4 space-y-6">
@@ -941,15 +1008,16 @@ export default function App() {
                   <form onSubmit={handleSearch} className="relative">
                     <input
                       type="text"
+                      inputMode="search"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Enter element name..."
-                      className="w-full bg-black/40 border border-white/10 rounded-lg py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all placeholder:text-white/20"
+                      className="w-full bg-black/40 border border-white/10 rounded-lg py-3.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 transition-all placeholder:text-white/20"
                     />
                     <button 
                       type="submit"
                       disabled={isLoading}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 bg-orange-500 hover:bg-orange-600 disabled:bg-white/10 rounded-md transition-colors"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-orange-500 hover:bg-orange-600 disabled:bg-white/10 rounded-md transition-colors"
                     >
                       {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
                     </button>
@@ -1307,29 +1375,36 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {registeredUsers.map((u, i) => (
-                  <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
-                    <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center overflow-hidden">
-                      {u.photoURL ? (
-                        <img src={u.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                      ) : (
-                        <User className="w-6 h-6 text-orange-500" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-bold truncate">{u.displayName}</h3>
-                        {u.role === 'admin' && (
-                          <span className="px-1.5 py-0.5 rounded bg-orange-500 text-[8px] font-bold text-white uppercase tracking-widest">Admin</span>
+                {registeredUsers.length === 0 ? (
+                  <div className="col-span-full p-12 rounded-2xl bg-white/5 border border-white/10 border-dashed text-center">
+                    <Users className="w-8 h-8 text-white/10 mx-auto mb-4" />
+                    <p className="text-sm text-white/20 uppercase tracking-widest font-mono">No researchers found. Connect to join the oracle.</p>
+                  </div>
+                ) : (
+                  registeredUsers.map((u, i) => (
+                    <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
+                      <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center overflow-hidden">
+                        {u.photoURL ? (
+                          <img src={u.photoURL} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        ) : (
+                          <User className="w-6 h-6 text-orange-500" />
                         )}
                       </div>
-                      <p className="text-[10px] text-white/40 font-mono truncate">{u.email}</p>
-                      <p className="text-[9px] text-white/20 font-mono uppercase tracking-widest mt-1">
-                        Last Active: {new Date(u.lastLogin).toLocaleDateString()}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-bold truncate">{u.displayName}</h3>
+                          {u.role === 'admin' && (
+                            <span className="px-1.5 py-0.5 rounded bg-orange-500 text-[8px] font-bold text-white uppercase tracking-widest">Admin</span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-white/40 font-mono truncate">{u.email}</p>
+                        <p className="text-[9px] text-white/20 font-mono uppercase tracking-widest mt-1">
+                          Last Active: {new Date(u.lastLogin).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </motion.div>
           ) : view === 'knowledge' ? (
@@ -1621,15 +1696,28 @@ export default function App() {
                     {requestsRemaining} Requests Left
                   </div>
                   <button 
-                    onClick={generateDiscoverySuggestions}
-                    disabled={isDiscovering || requestsRemaining <= 0}
-                    className="px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2"
+                    onClick={() => {
+                      console.log("Lab button clicked");
+                      generateDiscoverySuggestions();
+                    }}
+                    disabled={isDiscovering || requestsRemaining <= 0 || !user}
+                    className="relative z-10 px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation"
                   >
                     {isDiscovering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                     Generate Hypotheses
                   </button>
                 </div>
               </div>
+
+              {statusMessage && (
+                <motion.div 
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20 text-xs font-mono text-orange-500 text-center uppercase tracking-widest"
+                >
+                  {statusMessage}
+                </motion.div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {hypotheses.length === 0 ? (
@@ -1662,7 +1750,9 @@ export default function App() {
                         </div>
                       </div>
                       
-                      {user && (registeredUsers.find(u => u.uid === user.uid)?.role === 'admin') && (
+                      {user && (isRoleLoading ? (
+                        <div className="mt-2 flex justify-center"><Loader2 className="w-4 h-4 animate-spin text-white/20" /></div>
+                      ) : userRole === 'admin' ? (
                         <div className="flex items-center gap-2 mt-2">
                           <button 
                             onClick={async () => {
@@ -1688,7 +1778,7 @@ export default function App() {
                             Discard
                           </button>
                         </div>
-                      )}
+                      ) : null)}
                     </motion.div>
                   ))
                 )}

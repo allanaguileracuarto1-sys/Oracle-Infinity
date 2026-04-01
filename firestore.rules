@@ -34,8 +34,8 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // Users can only read/write their own profile
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Users can see the list of researchers, but only write their own profile
+      allow read: if isAuthenticated();
       allow write: if isAuthenticated() && request.auth.uid == userId;
     }
 

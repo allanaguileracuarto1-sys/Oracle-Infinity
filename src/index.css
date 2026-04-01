@@ -8,4 +8,18 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  
+  /* Mobile touch target improvements */
+  @media (max-width: 640px) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Prevent text selection on buttons for better feel */
+    button {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+  }
 }

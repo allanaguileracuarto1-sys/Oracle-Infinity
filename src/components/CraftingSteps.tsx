@@ -39,37 +39,48 @@ export const CraftingSteps: React.FC<CraftingStepsProps> = ({ data, onReportStep
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="group flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-orange-500/30 transition-all"
+            className="group p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-orange-500/30 transition-all"
           >
-            <div className="flex items-center gap-4 w-full">
-              <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-mono text-white/40 shrink-0">
-                {index + 1}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-mono text-white/40 shrink-0">
+                    {index + 1}
+                  </div>
+                  <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest">Step {index + 1}</span>
+                </div>
+                {onReportStep && (
+                  <button
+                    onClick={() => onReportStep(step.ingredients, step.result, data.target)}
+                    className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/20 hover:text-red-500 transition-all group/btn"
+                    title="Report incorrect combination"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 border border-white/5 text-xs font-medium text-white/80 truncate">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <div className="flex-1 min-w-0 px-3 py-2.5 rounded-lg bg-black/40 border border-white/5 text-xs font-medium text-white/80 text-center truncate">
                   {step.ingredients[0]}
                 </div>
-                <span className="text-white/20 text-xs font-bold">+</span>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/40 border border-white/5 text-xs font-medium text-white/80 truncate">
+                <div className="flex items-center justify-center gap-2 sm:contents">
+                  <span className="text-white/20 text-xs font-bold">+</span>
+                  <div className="flex-1 min-w-0 px-3 py-2.5 rounded-lg bg-black/40 border border-white/5 text-xs font-medium text-white/80 text-center truncate sm:hidden">
+                    {step.ingredients[1]}
+                  </div>
+                </div>
+                <div className="hidden sm:block flex-1 min-w-0 px-3 py-2.5 rounded-lg bg-black/40 border border-white/5 text-xs font-medium text-white/80 text-center truncate">
                   {step.ingredients[1]}
                 </div>
-                <ArrowRight className="w-3 h-3 text-white/20 shrink-0" />
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-xs font-bold text-orange-500 truncate">
+                <div className="flex justify-center py-1 sm:py-0">
+                  <ArrowRight className="w-4 h-4 text-orange-500 rotate-90 sm:rotate-0" />
+                </div>
+                <div className="flex-1 min-w-0 px-3 py-2.5 rounded-lg bg-orange-500/10 border border-orange-500/20 text-xs font-bold text-orange-500 flex items-center justify-center gap-2 truncate">
                   <span className="text-sm">{step.emoji}</span>
                   {step.result}
                 </div>
               </div>
-
-              {onReportStep && (
-                <button
-                  onClick={() => onReportStep(step.ingredients, step.result, data.target)}
-                  className="p-2 rounded-lg bg-white/5 hover:bg-red-500/20 text-white/20 hover:text-red-500 transition-all group/btn"
-                  title="Report incorrect combination"
-                >
-                  <AlertTriangle className="w-4 h-4" />
-                </button>
-              )}
             </div>
           </motion.div>
         ))}
