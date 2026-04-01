@@ -10,7 +10,7 @@ import { getRecipeTree, RecipeTree, decomposeItem } from './services/geminiServi
 import { CraftingSteps } from './components/CraftingSteps';
 import { cn } from './lib/utils';
 import { auth, db } from './firebase';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User as FirebaseUser, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { collection, addDoc, query, onSnapshot, orderBy, limit, where, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
 
 const CATEGORIES = ["All", "Nature", "Technology", "Mythology", "Science", "Food", "Pop Culture", "Other"];
@@ -234,9 +234,36 @@ export default function App() {
 
   const handleLogin = async () => {
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
-    } catch (err) {
-      console.error("Login Error:", err);
+      console.log("Attempting login...");
+      
+      // Explicitly set persistence to local
+      await setPersistence(auth, browserLocalPersistence);
+      
+      const provider = new GoogleAuthProvider();
+      // Add custom parameters to force account selection if needed
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      const result = await signInWithPopup(auth, provider);
+      console.log("Login successful:", result.user.email);
+    } catch (err: any) {
+      console.error("Login Error Details:", {
+        code: err.code,
+        message: err.message,
+        customData: err.customData,
+        email: err.email
+      });
+      
+      if (err.code === 'auth/popup-closed-by-user') {
+        console.warn("Popup was closed before completion.");
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        console.warn("Popup request was cancelled.");
+      } else if (err.code === 'auth/internal-error') {
+        console.error("Internal Firebase Auth error. Check configuration.");
+      } else if (err.code === 'auth/network-request-failed') {
+        console.error("Network request failed. This might be due to third-party cookie blocking.");
+      }
     }
   };
 
