@@ -460,30 +460,51 @@ export default function App() {
     const q = query.toLowerCase();
     const keywords = q.split(/\s+/).filter(k => k.length > 2);
     
-    const filterByRelevance = (list: any[], field: string) => {
-      if (keywords.length === 0) return list.slice(0, 10);
+    const filterByRelevance = (list: any[], field: string, limitCount: number = 20) => {
+      if (keywords.length === 0) return list.slice(0, limitCount);
+      
+      // Prioritize exact matches and basic element combinations
+      const basicElements = ["water", "fire", "earth", "wind"];
+      
       return list
         .filter(item => {
           const text = (item[field] || '').toLowerCase();
-          const ingredients = (item.ingredients || []).join(' ').toLowerCase();
-          return keywords.some(k => text.includes(k) || ingredients.includes(k));
+          const ingredients = (item.ingredients || []).map((i: string) => i.toLowerCase());
+          const ingredientsStr = ingredients.join(' ');
+          
+          // Match by keywords
+          const matchesKeyword = keywords.some(k => text.includes(k) || ingredientsStr.includes(k));
+          
+          // Also include if it involves basic elements and the query is related to crafting
+          const involvesBasic = ingredients.some(i => basicElements.includes(i));
+          
+          return matchesKeyword || (involvesBasic && keywords.length > 0);
         })
-        .slice(0, 20);
+        .sort((a, b) => {
+          // Sort by date (newest first) to ensure recent corrections are seen
+          const dateA = new Date(a.createdAt || a.reportedAt || 0).getTime();
+          const dateB = new Date(b.createdAt || b.reportedAt || 0).getTime();
+          return dateB - dateA;
+        })
+        .slice(0, limitCount);
     };
 
-    const relevantCorrections = filterByRelevance(corrections, 'correctResult');
-    const relevantConfirmed = filterByRelevance(confirmedCombinations, 'result');
-    const relevantRecipes = filterByRelevance(globalRecipes, 'target');
+    const relevantCorrections = filterByRelevance(corrections, 'correctResult', 30);
+    const relevantConfirmed = filterByRelevance(confirmedCombinations, 'result', 20);
+    const relevantRecipes = filterByRelevance(globalRecipes, 'target', 15);
+    const relevantFailed = filterByRelevance(failedRecipes, 'target', 20);
+    
     const relevantHeuristics = heuristics.filter(h => {
       const pattern = h.pattern.toLowerCase();
-      return keywords.some(k => pattern.includes(k));
+      return keywords.length === 0 || keywords.some(k => pattern.includes(k));
     }).slice(0, 10);
 
     return {
       corrections: relevantCorrections,
       confirmed: relevantConfirmed,
       recipes: relevantRecipes,
-      heuristics: relevantHeuristics
+      heuristics: relevantHeuristics,
+      failed: relevantFailed
     };
   };
 
@@ -557,8 +578,7 @@ export default function App() {
         .map(h => `PATTERN: ${h.pattern}`)
         .join('. ');
 
-      const negativeContext = failedRecipes
-        .slice(0, 10)
+      const negativeContext = contextData.failed
         .map(f => `DO NOT USE: ${f.ingredients.join(' + ')} = ${f.target} (INCORRECT)`)
         .join('. ');
 
@@ -567,7 +587,7 @@ export default function App() {
       [VERIFIED CORRECTIONS - HIGHEST PRIORITY]: ${correctionContext}
       [CONFIRMED COMBINATIONS]: ${confirmedContext}
       [SUCCESSFUL EXAMPLES]: ${positiveContext}
-      [FORBIDDEN COMBINATIONS]: ${negativeContext}`;
+      [FORBIDDEN COMBINATIONS - NEVER REPEAT THESE]: ${negativeContext}`;
 
       console.log("Oracle Context Built (Semantic):", { 
         corrections: contextData.corrections.length, 
@@ -863,10 +883,10 @@ export default function App() {
       console.log("Filtered Suggestions:", filteredSuggestions);
 
       if (filteredSuggestions.length === 0) {
-        setStatusMessage("No se encontraron hipótesis únicas. Inténtalo de nuevo más tarde.");
+        setStatusMessage("No unique hypotheses found. Try again later.");
         setTimeout(() => setStatusMessage(null), 3000);
       } else {
-        setStatusMessage(`¡Se han generado ${filteredSuggestions.length} hipótesis con éxito!`);
+        setStatusMessage(`Successfully generated ${filteredSuggestions.length} hypotheses!`);
         setTimeout(() => setStatusMessage(null), 3000);
         // Save suggestions to Firestore
         for (const s of filteredSuggestions) {
@@ -879,7 +899,7 @@ export default function App() {
       }
     } catch (err: any) {
       console.error("Discovery Error:", err);
-      setStatusMessage(`Error: ${err.message || "Error desconocido"}`);
+      setStatusMessage(`Error: ${err.message || "Unknown error"}`);
       setTimeout(() => setStatusMessage(null), 5000);
     } finally {
       setIsDiscovering(false);
@@ -1667,32 +1687,32 @@ export default function App() {
                 <div>
                   <h2 className="text-2xl font-bold tracking-tighter uppercase flex items-center gap-3">
                     <Terminal className="w-6 h-6 text-orange-500" />
-                    Laboratorio de Descubrimiento
+                    Discovery Lab
                   </h2>
                   <p className="text-xs text-white/40 font-mono uppercase tracking-widest mt-1">
-                    Síntesis Neural Proactiva - {hypotheses.length} Hipótesis Pendientes
+                    Proactive Neural Synthesis - {hypotheses.length} Pending Hypotheses
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-[10px] font-mono text-orange-500 uppercase tracking-widest">
                     <Zap className="w-3 h-3" />
-                    {requestsRemaining} Solicitudes Restantes
+                    {requestsRemaining} Requests Left
                   </div>
                   <button 
-                    onClick={() => {
-                      console.log("Click en botón Lab. Usuario:", !!user, "Solicitudes:", requestsRemaining, "Descubriendo:", isDiscovering);
+                    onPointerDown={() => {
+                      console.log("Lab button pointer down. User:", !!user, "Requests:", requestsRemaining, "Discovering:", isDiscovering);
                       if (isDiscovering || requestsRemaining <= 0 || !user) {
-                        console.log("Click bloqueado por estado.");
+                        console.log("Button click blocked by state.");
                         return;
                       }
                       setIsDiscovering(true);
                       generateDiscoverySuggestions();
                     }}
                     disabled={isDiscovering || requestsRemaining <= 0 || !user}
-                    className="relative z-30 px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation shadow-lg shadow-orange-500/20"
+                    className="relative z-20 px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation"
                   >
                     {isDiscovering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                    {!user ? "Conectar para usar Lab" : requestsRemaining <= 0 ? "Sin Solicitudes" : isDiscovering ? "Sintetizando..." : "Generar Hipótesis"}
+                    {!user ? "Connect to Lab" : requestsRemaining <= 0 ? "No Requests" : isDiscovering ? "Synthesizing..." : "Generate Hypotheses"}
                   </button>
                 </div>
               </div>
@@ -1755,7 +1775,7 @@ export default function App() {
                             }}
                             className="flex-1 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-[10px] font-bold uppercase tracking-widest transition-all"
                           >
-                            Confirmar
+                            Confirm
                           </button>
                           <button 
                             onClick={async () => {
@@ -1763,7 +1783,7 @@ export default function App() {
                             }}
                             className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-widest transition-all"
                           >
-                            Descartar
+                            Discard
                           </button>
                         </div>
                       ) : null)}
