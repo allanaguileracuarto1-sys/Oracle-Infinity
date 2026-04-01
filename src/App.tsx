@@ -789,16 +789,14 @@ export default function App() {
   };
 
   const generateDiscoverySuggestions = async () => {
-    console.log("Generate Hypotheses function started. User:", user?.uid);
-    // Note: setIsDiscovering(true) is now called in the onClick handler for immediate feedback
-    setStatusMessage("Synthesizing new hypotheses...");
+    console.log("Iniciando generación de hipótesis. Usuario:", user?.uid);
+    setStatusMessage("Sintetizando nuevas hipótesis...");
     setRequestsRemaining(prev => prev - 1);
     try {
       const { GoogleGenAI, Type } = await import('@google/genai');
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
       
-      // Default base elements if globalRecipes is empty
-      const baseElements = ["Water", "Fire", "Earth", "Wind", "Steam", "Mud", "Lava", "Dust"];
+      const baseElements = ["Agua", "Fuego", "Tierra", "Aire", "Vapor", "Lodo", "Lava", "Polvo"];
       
       // Pick 8 random items from global recipes to use as basis
       let basis = globalRecipes
@@ -815,9 +813,9 @@ export default function App() {
 
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Based on these items: ${basis.join(', ')}, suggest 5 new interesting combinations that might exist in Infinite Craft.
-        The combinations should be logical but creative.
-        Return them as an array of objects with result, ingredients (array of 2), and emoji.`,
+        contents: `Basado en estos elementos: ${basis.join(', ')}, sugiere 5 nuevas combinaciones interesantes que podrían existir en Infinite Craft.
+        Las combinaciones deben ser lógicas pero creativas.
+        Devuélvelas como un array de objetos con result, ingredients (array de 2), y emoji.`,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -865,10 +863,10 @@ export default function App() {
       console.log("Filtered Suggestions:", filteredSuggestions);
 
       if (filteredSuggestions.length === 0) {
-        setStatusMessage("No new unique hypotheses found. Try again later.");
+        setStatusMessage("No se encontraron hipótesis únicas. Inténtalo de nuevo más tarde.");
         setTimeout(() => setStatusMessage(null), 3000);
       } else {
-        setStatusMessage(`Successfully generated ${filteredSuggestions.length} hypotheses!`);
+        setStatusMessage(`¡Se han generado ${filteredSuggestions.length} hipótesis con éxito!`);
         setTimeout(() => setStatusMessage(null), 3000);
         // Save suggestions to Firestore
         for (const s of filteredSuggestions) {
@@ -881,7 +879,7 @@ export default function App() {
       }
     } catch (err: any) {
       console.error("Discovery Error:", err);
-      setStatusMessage(`Error: ${err.message || "Unknown error"}`);
+      setStatusMessage(`Error: ${err.message || "Error desconocido"}`);
       setTimeout(() => setStatusMessage(null), 5000);
     } finally {
       setIsDiscovering(false);
@@ -1669,32 +1667,32 @@ export default function App() {
                 <div>
                   <h2 className="text-2xl font-bold tracking-tighter uppercase flex items-center gap-3">
                     <Terminal className="w-6 h-6 text-orange-500" />
-                    Discovery Lab
+                    Laboratorio de Descubrimiento
                   </h2>
                   <p className="text-xs text-white/40 font-mono uppercase tracking-widest mt-1">
-                    Proactive Neural Synthesis - {hypotheses.length} Pending Hypotheses
+                    Síntesis Neural Proactiva - {hypotheses.length} Hipótesis Pendientes
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-[10px] font-mono text-orange-500 uppercase tracking-widest">
                     <Zap className="w-3 h-3" />
-                    {requestsRemaining} Requests Left
+                    {requestsRemaining} Solicitudes Restantes
                   </div>
                   <button 
-                    onPointerDown={() => {
-                      console.log("Lab button pointer down. User:", !!user, "Requests:", requestsRemaining, "Discovering:", isDiscovering);
+                    onClick={() => {
+                      console.log("Click en botón Lab. Usuario:", !!user, "Solicitudes:", requestsRemaining, "Descubriendo:", isDiscovering);
                       if (isDiscovering || requestsRemaining <= 0 || !user) {
-                        console.log("Button click blocked by state.");
+                        console.log("Click bloqueado por estado.");
                         return;
                       }
                       setIsDiscovering(true);
                       generateDiscoverySuggestions();
                     }}
                     disabled={isDiscovering || requestsRemaining <= 0 || !user}
-                    className="relative z-20 px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation"
+                    className="relative z-30 px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 disabled:bg-white/10 text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 cursor-pointer active:scale-95 touch-manipulation shadow-lg shadow-orange-500/20"
                   >
                     {isDiscovering ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                    {!user ? "Connect to Lab" : requestsRemaining <= 0 ? "No Requests" : isDiscovering ? "Synthesizing..." : "Generate Hypotheses"}
+                    {!user ? "Conectar para usar Lab" : requestsRemaining <= 0 ? "Sin Solicitudes" : isDiscovering ? "Sintetizando..." : "Generar Hipótesis"}
                   </button>
                 </div>
               </div>
@@ -1713,7 +1711,7 @@ export default function App() {
                 {hypotheses.length === 0 ? (
                   <div className="col-span-full p-24 rounded-3xl bg-white/5 border border-white/10 border-dashed text-center">
                     <Box className="w-12 h-12 text-white/10 mx-auto mb-4" />
-                    <p className="text-sm text-white/20 uppercase tracking-widest font-mono">No active hypotheses. Click generate to start.</p>
+                    <p className="text-sm text-white/20 uppercase tracking-widest font-mono">No hay hipótesis activas. Haz clic en generar para comenzar.</p>
                   </div>
                 ) : (
                   hypotheses.map((s, i) => (
@@ -1726,7 +1724,7 @@ export default function App() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-2xl">{s.emoji}</span>
-                        <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest">Hypothesis #{i+1}</span>
+                        <span className="text-[10px] font-mono text-white/20 uppercase tracking-widest">Hipótesis #{i+1}</span>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-xs text-white/40 font-mono uppercase">
@@ -1757,7 +1755,7 @@ export default function App() {
                             }}
                             className="flex-1 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-[10px] font-bold uppercase tracking-widest transition-all"
                           >
-                            Confirm
+                            Confirmar
                           </button>
                           <button 
                             onClick={async () => {
@@ -1765,7 +1763,7 @@ export default function App() {
                             }}
                             className="flex-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-widest transition-all"
                           >
-                            Discard
+                            Descartar
                           </button>
                         </div>
                       ) : null)}
