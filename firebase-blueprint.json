@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "Recipe": {
+      "title": "Recipe",
+      "description": "A crafting recipe for an element in Infinite Craft",
+      "type": "object",
+      "properties": {
+        "target": { "type": "string", "description": "The name of the element" },
+        "emoji": { "type": "string", "description": "Emoji representing the element" },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "result": { "type": "string" },
+              "ingredients": { "type": "array", "items": { "type": "string" } },
+              "emoji": { "type": "string" }
+            }
+          }
+        },
+        "category": { "type": "string", "description": "Category of the element (e.g., Nature, Tech, Mythic)" },
+        "discoveredAt": { "type": "string", "format": "date-time" },
+        "discoverer": { "type": "string", "description": "UID of the user who first discovered/saved it" }
+      },
+      "required": ["target", "emoji", "steps", "category", "discoveredAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A registered user in the Infinite Craft Oracle",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "lastLogin": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "email"]
+    },
+    "FailedRecipe": {
+      "title": "FailedRecipe",
+      "description": "A recipe reported as incorrect",
+      "type": "object",
+      "properties": {
+        "target": { "type": "string" },
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "reportedBy": { "type": "string" },
+        "reportedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["target", "ingredients", "reportedBy", "reportedAt"]
+    },
+    "Correction": {
+      "title": "Correction",
+      "description": "A correction for a specific crafting step",
+      "type": "object",
+      "properties": {
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "reportedResult": { "type": "string" },
+        "correctResult": { "type": "string" },
+        "reportedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ingredients", "reportedResult", "correctResult", "reportedBy", "createdAt"]
+    },
+    "ConfirmedCombination": {
+      "title": "ConfirmedCombination",
+      "description": "A crafting combination verified as correct by a user",
+      "type": "object",
+      "properties": {
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "result": { "type": "string" },
+        "emoji": { "type": "string" },
+        "verifiedBy": { "type": "string" },
+        "verifiedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ingredients", "result", "verifiedBy", "verifiedAt"]
+    },
+    "Hypothesis": {
+      "title": "Hypothesis",
+      "description": "A potential crafting combination suggested by AI for verification",
+      "type": "object",
+      "properties": {
+        "ingredients": { "type": "array", "items": { "type": "string" } },
+        "result": { "type": "string" },
+        "emoji": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ingredients", "result", "emoji", "createdBy", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/recipes/{recipeId}": {
+      "schema": "Recipe",
+      "description": "Collection of all known crafting recipes"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of all registered users"
+    },
+    "/failed_recipes/{reportId}": {
+      "schema": "FailedRecipe",
+      "description": "Collection of recipes reported as incorrect"
+    },
+    "/corrections/{correctionId}": {
+      "schema": "Correction",
+      "description": "Collection of user-submitted crafting corrections"
+    },
+    "/confirmed_combinations/{combinationId}": {
+      "schema": "ConfirmedCombination",
+      "description": "Collection of verified crafting combinations"
+    },
+    "/hypotheses/{hypothesisId}": {
+      "schema": "Hypothesis",
+      "description": "Collection of pending AI-generated hypotheses"
+    }
+  }
+}

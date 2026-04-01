@@ -1,0 +1,5 @@
+{
+  "name": "Infinite Craft Oracle",
+  "description": "A technical crafting assistant for Infinite Craft, providing detailed recipe trees and step-by-step discovery guides.",
+  "requestFramePermissions": []
+}

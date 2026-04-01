@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "allanaguileracuarto1@gmail.com" && request.auth.token.email_verified == true));
+    }
+    
+    function isValidRecipe(data) {
+      return data.target is string && data.target.size() > 0 && data.target.size() < 100 &&
+             data.emoji is string &&
+             data.steps is list &&
+             data.category is string &&
+             data.discoveredAt is string;
+    }
+
+    match /recipes/{recipeId} {
+      // Anyone can read recipes to browse the database
+      allow read: if true;
+      
+      // Only authenticated users can save new recipes
+      allow create: if isAuthenticated() && isValidRecipe(request.resource.data);
+      
+      // Recipes are generally immutable once discovered, but can be deleted by discoverer or admin
+      allow update: if false;
+      allow delete: if isAuthenticated() && (resource.data.discoverer == request.auth.uid || isAdmin());
+    }
+
+    match /users/{userId} {
+      // Users can only read/write their own profile
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    match /failed_recipes/{reportId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    match /corrections/{correctionId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (resource.data.reportedBy == request.auth.uid || isAdmin());
+    }
+
+    match /confirmed_combinations/{combinationId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    match /heuristics/{heuristicId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /hypotheses/{hypothesisId} {
+      // All users can see hypotheses
+      allow read: if true;
+      
+      // Any authenticated user can generate a new hypothesis
+      allow create: if isAuthenticated();
+      
+      // Only admins can confirm (delete) or discard hypotheses
+      allow update, delete: if isAdmin();
+    }
+  }
+}
