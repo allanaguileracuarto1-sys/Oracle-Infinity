@@ -6,14 +6,24 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, Zap, Info, History, Layers, ChevronRight, Terminal, Box, Loader2, Database, Filter, User, LogIn, Trash2, Users, ArrowRight, AlertTriangle, CheckCircle, Infinity } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { getRecipeTree, RecipeTree, decomposeItem } from './services/geminiService';
+import { getRecipeTree, decomposeItem } from './services/geminiService';
 import { CraftingSteps } from './components/CraftingSteps';
 import { cn } from './lib/utils';
 import { auth, db } from './firebase';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, User as FirebaseUser, setPersistence, browserLocalPersistence } from 'firebase/auth';
-import { collection, addDoc, query, onSnapshot, orderBy, limit, where, getDocs, deleteDoc, doc, setDoc } from 'firebase/firestore';
-
-const CATEGORIES = ["All", "Nature", "Technology", "Mythology", "Science", "Food", "Pop Culture", "Other"];
+import type { RecipeTree, GlobalRecipe, ViewType, Category, Correction, ConfirmedCombination, FailedRecipe, Heuristic, Hypothesis } from './types';
+import { CATEGORIES, RPM_LIMIT, BASIC_ELEMENTS } from './types';
+import { 
+  useAuth, 
+  useGlobalRecipes, 
+  useCorrections, 
+  useConfirmedCombinations, 
+  useFailedRecipes, 
+  useHeuristics, 
+  useHypotheses, 
+  useRegisteredUsers, 
+  useRateLimit, 
+  useLearnedCrafts 
+} from './hooks';
 
 const NavButtons = ({ view, setView, hypothesesCount }: { view: string, setView: (v: any) => void, hypothesesCount: number }) => (
   <>

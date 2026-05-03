@@ -1,19 +1,7 @@
 import { GoogleGenAI, Type, ThinkingLevel } from "@google/genai";
+import type { RecipeTree, DecomposedItem } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
-
-export interface CraftingStep {
-  result: string;
-  ingredients: [string, string];
-  emoji?: string;
-}
-
-export interface RecipeTree {
-  target: string;
-  emoji: string;
-  steps: CraftingStep[];
-  category: string;
-}
 
 const SYSTEM_INSTRUCTION = `You are the Infinite Craft Oracle. Your task is to provide crafting recipes for the game Infinite Craft.
 
@@ -32,12 +20,6 @@ RULES:
 7. Categorize: Nature, Technology, Mythology, Science, Food, Pop Culture, or Other.
 8. BASIC ELEMENTS: If the target is Water, Fire, Earth, or Wind, return an EMPTY steps array.
 9. CASING: Use Title Case (e.g., "Water").`;
-
-export interface DecomposedItem {
-  result: string;
-  ingredients: [string, string];
-  emoji: string;
-}
 
 export async function decomposeItem(targetItem: string, context?: string): Promise<DecomposedItem | null> {
   try {

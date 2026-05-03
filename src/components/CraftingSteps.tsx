@@ -1,6 +1,5 @@
-import React from 'react';
 import { motion } from 'motion/react';
-import { RecipeTree } from '../services/geminiService';
+import type { RecipeTree } from '../types';
 import { Zap, ArrowRight, Box, AlertTriangle } from 'lucide-react';
 
 interface CraftingStepsProps {
