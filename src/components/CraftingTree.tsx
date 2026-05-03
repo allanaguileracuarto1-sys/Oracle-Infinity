@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import { RecipeTree, CraftingStep } from '../services/geminiService';
+import type { RecipeTree } from '../types';
 
 interface CraftingTreeProps {
   data: RecipeTree;
